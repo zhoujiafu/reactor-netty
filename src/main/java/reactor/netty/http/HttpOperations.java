@@ -115,14 +115,19 @@ public abstract class HttpOperations<INBOUND extends NettyInbound, OUTBOUND exte
 		if (!(message instanceof ByteBuf)) {
 			return super.sendObject(message);
 		}
-		ByteBuf b = (ByteBuf) message;
-		return new PostHeadersNettyOutbound(FutureMono.deferFuture(() -> {
-			if (markSentHeaderAndBody()) {
-				preSendHeadersAndStatus();
-				return channel().writeAndFlush(newFullBodyMessage(b));
-			}
-			return channel().writeAndFlush(b);
-		}), this, b);
+		ByteBuf b = (ByteBuf)message;
+		return super.sendObject(b, m -> {
+			preSendHeadersAndStatus();
+			return newFullBodyMessage(m);
+		}, m -> terminate());
+//		ByteBuf b = (ByteBuf) message;
+//		return new PostHeadersNettyOutbound(FutureMono.deferFuture(() -> {
+//			if (markSentHeaderAndBody()) {
+//				preSendHeadersAndStatus();
+//				return channel().writeAndFlush(newFullBodyMessage(b));
+//			}
+//			return channel().writeAndFlush(b);
+//		}), this, b);
 	}
 
 	@Override

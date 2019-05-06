@@ -21,6 +21,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 import io.netty.buffer.ByteBuf;
@@ -43,7 +44,6 @@ import reactor.netty.FutureMono;
 import reactor.netty.NettyInbound;
 import reactor.netty.NettyOutbound;
 import reactor.netty.NettyPipeline;
-import reactor.netty.ReactorNetty;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 import reactor.util.context.Context;
@@ -250,25 +250,31 @@ public class ChannelOperations<INBOUND extends NettyInbound, OUTBOUND extends Ne
 
 	@Override
 	public NettyOutbound sendObject(Object message) {
-		return then(FutureMono.deferFuture(() -> connection.channel()
-		                                                   .writeAndFlush(message)),
-				() -> ReactorNetty.safeRelease(message));
+		return then(MonoSendScalar.objectSource(message, channel(), MonoSend.FUNCTION_IDENTITY, MonoSendScalar.emptyPostWrite()));
+	}
+
+	/**
+	 * Sends a message to the peer, listens for any error on write and closes on terminal signal
+	 * (complete|error).
+	 * <p>Note: Nesting any send* method is not supported.</p>
+	 *
+	 * @param message the object to publish
+	 * @param encoder a transforming message function
+	 * @param postWrite a postWrite callback
+	 * @param <I> input type
+	 *
+	 * @return A {@link Mono} to signal successful sequence write (e.g. after "flush") or
+	 * any error during write
+	 */
+	public <I> NettyOutbound sendObject(I message, Function<? super I, ?> encoder, Consumer<? super I> postWrite) {
+		return then(MonoSendScalar.objectSource(message, channel(), encoder, postWrite));
 	}
 
 	@Override
 	public <S> NettyOutbound sendUsing(Callable<? extends S> sourceInput,
 			BiFunction<? super Connection, ? super S, ?> mappedInput,
 			Consumer<? super S> sourceCleanup) {
-		Objects.requireNonNull(sourceInput, "sourceInput");
-		Objects.requireNonNull(mappedInput, "mappedInput");
-		Objects.requireNonNull(sourceCleanup, "sourceCleanup");
-
-		return then(Mono.using(
-				sourceInput,
-				s -> FutureMono.from(connection.channel()
-				                               .writeAndFlush(mappedInput.apply(this, s))),
-				sourceCleanup)
-		);
+		return then(MonoSendUsing.objectSource(sourceInput, channel(), s -> mappedInput.apply(this, s), sourceCleanup));
 	}
 
 	/**
