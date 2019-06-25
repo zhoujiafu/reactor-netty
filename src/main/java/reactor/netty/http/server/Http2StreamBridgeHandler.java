@@ -81,7 +81,6 @@ final class Http2StreamBridgeHandler extends ChannelDuplexHandler {
 			HttpToH2Operations ops = new HttpToH2Operations(Connection.from(ctx.channel()),
 					listener,
 					request,
-					headersFrame.headers(),
 					ConnectionInfo.from(ctx.channel()
 					                       .parent(),
 							readForwardHeaders,
@@ -98,6 +97,8 @@ final class Http2StreamBridgeHandler extends ChannelDuplexHandler {
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
 		if (msg instanceof Http2Headers) {
 			msg = new DefaultHttp2HeadersFrame((Http2Headers) msg);
+			ctx.write(msg, promise);
+			return;
 		}
 
 		boolean endOfHttp2Stream = false;

@@ -27,6 +27,7 @@ final class AccessLog {
 	static final Logger log = Loggers.getLogger("reactor.netty.http.server.AccessLog");
 	static final DateTimeFormatter DATE_TIME_FORMATTER =
 			DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z", Locale.US);
+
 	static final String COMMON_LOG_FORMAT =
 			"{} - {} [{}] \"{} {} {}\" {} {} {} {} ms";
 	static final String MISSING = "-";

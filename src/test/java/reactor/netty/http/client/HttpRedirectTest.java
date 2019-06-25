@@ -332,7 +332,7 @@ public class HttpRedirectTest {
 		          .addressSupplier(server::address)
 		          .wiretap(true)
 		          .followRedirect((req, res) -> {
-		              boolean result = req.redirectedFrom().length < 4;
+		              boolean result = res.redirectedFrom().length < 4;
 		              if (result) {
 		                  followRedirects.getAndIncrement();
 		              }

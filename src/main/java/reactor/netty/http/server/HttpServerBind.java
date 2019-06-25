@@ -407,12 +407,6 @@ final class HttpServerBind extends HttpServer
 			HttpServerCodec httpServerCodec =
 					new HttpServerCodec(line, header, chunk, validate, buffer);
 
-//			p.addLast(NettyPipeline.HttpCodec, httpServerCodec)
-//			 .addLast(new HttpServerUpgradeHandler(httpServerCodec,
-//					 new Http1OrH2CleartextCodec(this,/;poõ
-//							 listener,
-//							 p.get(NettyPipeline.LoggingHandler) != null)));
-
 			Http1OrH2CleartextCodec
 					upgrader = new Http1OrH2CleartextCodec(this, listener, p.get(NettyPipeline.LoggingHandler) != null);
 
@@ -620,7 +614,12 @@ final class HttpServerBind extends HttpServer
 						new HttpServerCodec(parent.line, parent.header, parent.chunk, parent.validate, parent.buffer))
 				 .addBefore(NettyPipeline.ReactiveBridge,
 						 NettyPipeline.HttpTrafficHandler,
-						 new HttpTrafficHandler(listener, parent.forwarded, parent.compressPredicate, parent.cookieEncoder, parent.cookieDecoder, true));
+						 new HttpTrafficHandler(listener,
+								 parent.forwarded,
+								 parent.compressPredicate,
+								 parent.cookieEncoder,
+								 parent.cookieDecoder,
+								 true));
 
 				if (ACCESS_LOG) {
 					p.addAfter(NettyPipeline.HttpCodec,
@@ -684,6 +683,7 @@ final class HttpServerBind extends HttpServer
 		}
 	}
 
+	@ChannelHandler.Sharable
 	static final class Http2StreamInitializer extends ChannelInitializer<Channel> {
 
 		final boolean             forwarded;

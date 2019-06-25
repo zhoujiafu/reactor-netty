@@ -1055,7 +1055,12 @@ public class HttpClientTest {
 				    .expectComplete()
 				    .verify(Duration.ofSeconds(30));
 
-		assertThat(latch.await(30, TimeUnit.SECONDS)).isEqualTo(true);
+		try {
+			assertThat(latch.await(15, TimeUnit.SECONDS)).isEqualTo(true);
+		}
+		finally {
+			System.out.println("Context not found in "+latch.getCount()+" callbacks");
+		}
 		server.disposeNow();
 	}
 

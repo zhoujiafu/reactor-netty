@@ -40,6 +40,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.http.server.HttpServerRequest;
 import reactor.netty.http.server.HttpServerResponse;
+import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.tcp.SslProvider;
 import reactor.test.StepVerifier;
 
@@ -655,21 +656,41 @@ public class HttpTests {
 	}
 
 	@Test
-	@Ignore
 	public void testH2Secure() throws Exception {
 		SelfSignedCertificate cert = new SelfSignedCertificate();
 		SslContextBuilder serverOptions = SslContextBuilder.forServer(cert.certificate(), cert.privateKey());
+		SslContextBuilder clientOptions = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE);
+
+		HttpResources.set(ConnectionProvider.fixed("test", 1));
 
 		DisposableServer server =
 				HttpServer.create()
 				          .protocol(HttpProtocol.H2)
 				          .secure(ssl -> ssl.sslContext(serverOptions))
-				          .port(8080)
-				          .handle((req, res) -> res.sendString(Mono.just("Hello")))
+				          .handle((req, res) -> res.send(req.receive().retain().delayElements(Duration.ofSeconds(1))))
 				          .wiretap(true)
 				          .bindNow();
 
-		new CountDownLatch(1).await();
+		Flux<String> client = HttpClient.create()
+		                                .port(server.port())
+		                                .secure(ssl -> ssl.sslContext(clientOptions))
+		                                .protocol(HttpProtocol.H2)
+		                                .wiretap(true)
+		                                .post()
+		                                .send(ByteBufFlux.fromString(Flux.just("Hello", "World").delayElements(Duration.ofSeconds(1))))
+		                                .responseContent()
+		                                .asString();
+
+		StepVerifier.create(client)
+		            .expectNext("Hello")
+		            .expectNext("World")
+		            .verifyComplete();
+
+		StepVerifier.create(client)
+		            .expectNext("Hello")
+		            .expectNext("World")
+		            .verifyComplete();
+
 		server.disposeNow();
 	}
 
@@ -683,10 +704,10 @@ public class HttpTests {
 				HttpServer.create()
 				          .protocol(HttpProtocol.H2, HttpProtocol.HTTP11)
 				          .secure(ssl -> ssl.sslContext(serverOptions))
-				          .port(8080)
 				          .handle((req, res) -> res.sendString(Mono.just("Hello")))
 				          .wiretap(true)
 				          .bindNow();
+
 
 		new CountDownLatch(1).await();
 		server.disposeNow();
@@ -723,6 +744,7 @@ public class HttpTests {
 				HttpServer.create()
 				          .protocol(HttpProtocol.H2, HttpProtocol.HTTP11)
 				          .secure(ssl -> ssl.sslContext(serverOptions))
+				          .handle((req, res) -> res.sendString(req.receive().aggregate().retain().asString()))
 				          .port(8080)
 				          .handle((req, res) -> res.sendString(req.receive().aggregate().retain().asString()))
 				          .wiretap(true)

@@ -20,8 +20,8 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.handler.codec.http2.Http2DataFrame;
-import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2HeadersFrame;
+import io.netty.handler.codec.http2.Http2Settings;
 import io.netty.util.ReferenceCountUtil;
 import reactor.netty.Connection;
 import reactor.netty.ConnectionObserver;
@@ -29,21 +29,17 @@ import reactor.netty.ConnectionObserver;
 /**
  * @author Stephane Maldini
  */
-public class HttpToH2Operations extends HttpServerOperations {
+final class HttpToH2Operations extends HttpServerOperations {
 
-
-	final Http2Headers http2Headers;
 
 	HttpToH2Operations(Connection c,
 			ConnectionObserver listener,
 			HttpRequest request,
-			Http2Headers headers,
 			ConnectionInfo connectionInfo,
 			ServerCookieEncoder encoder,
 			ServerCookieDecoder decoder) {
 		super(c, listener, null, request, connectionInfo, encoder, decoder);
 
-		this.http2Headers = headers;
 	}
 
 	@Override
@@ -56,7 +52,7 @@ public class HttpToH2Operations extends HttpServerOperations {
 			}
 			return;
 		}
-		else if(msg instanceof Http2HeadersFrame) {
+		if(msg instanceof Http2HeadersFrame) {
 			try {
 				listener().onStateChange(this, HttpServerState.REQUEST_RECEIVED);
 			}
@@ -67,7 +63,12 @@ public class HttpToH2Operations extends HttpServerOperations {
 			}
 			if (((Http2HeadersFrame) msg).isEndStream()) {
 				super.onInboundNext(ctx, msg);
+				onInboundComplete();
 			}
+			return;
+		}
+		if (msg instanceof Http2Settings) {
+			//ignore for now
 			return;
 		}
 		super.onInboundNext(ctx, msg);

@@ -424,7 +424,7 @@ public class ChannelOperations<INBOUND extends NettyInbound, OUTBOUND extends Ne
 	 *
 	 * @param err the {@link Throwable} cause
 	 */
-	protected final void onInboundError(Throwable err) {
+	protected void onInboundError(Throwable err) {
 		inbound.onInboundError(err);
 	}
 

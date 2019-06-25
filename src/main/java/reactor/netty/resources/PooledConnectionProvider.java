@@ -283,7 +283,7 @@ final class PooledConnectionProvider implements ConnectionProvider {
 			activeConnections.decrementAndGet();
 			inactiveConnections.incrementAndGet();
 			if (log.isDebugEnabled()) {
-				log.debug(format(ch, "Channel cleaned, now {} active connections and {} inactive connections"),
+				log.debug(format(ch, "Channel released, now {} active connections and {} inactive connections"),
 						activeConnections, inactiveConnections);
 			}
 		}
