@@ -38,6 +38,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.pool.ChannelHealthChecker;
 import io.netty.channel.pool.ChannelPool;
 import io.netty.channel.pool.ChannelPoolHandler;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -244,7 +245,23 @@ final class PooledConnectionProvider implements ConnectionProvider {
 
 		@Override
 		public Future<Boolean> isHealthy(Channel channel) {
-			return channel.isActive() ? HEALTHY : UNHEALTHY;
+			if (!channel.isActive()) {
+				return UNHEALTHY;
+			}
+
+			SslHandler ssl = channel.pipeline().get(SslHandler.class);
+			if (ssl != null) {
+				if (ssl.engine().isOutboundDone()) {
+					channel.close();
+					return UNHEALTHY;
+				}
+				else {
+					return HEALTHY;
+				}
+			}
+			else {
+				return HEALTHY;
+			}
 		}
 
 		@Override
