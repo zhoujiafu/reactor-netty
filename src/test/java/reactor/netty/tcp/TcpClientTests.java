@@ -142,8 +142,8 @@ public class TcpClientTests {
 		TcpClient secureClient = TcpClient.create()
 		                                  .secure();
 
-		assertTrue(secureClient.isSecure());
-		assertFalse(secureClient.noSSL().isSecure());
+		assertTrue(secureClient.configuration().isSecure());
+		assertFalse(secureClient.noSSL().configuration().isSecure());
 	}
 
 	@Test
@@ -563,9 +563,8 @@ public class TcpClientTests {
 	@Test
 	public void gettingOptionsDuplicates() {
 		TcpClient client = TcpClient.create().host("example.com").port(123);
-		Assertions.assertThat(client.configure())
-		          .isNotSameAs(TcpClient.DEFAULT_BOOTSTRAP)
-		          .isNotSameAs(client.configure());
+		Assertions.assertThat(client.configuration())
+		          .isNotSameAs(TcpClientConnect.INSTANCE.configuration());
 	}
 
 	public static final class EchoServer
@@ -795,13 +794,13 @@ public class TcpClientTests {
 		if (withLoop) {
 			client =
 					TcpClient.create(pool)
-					         .addressSupplier(server::address)
+					         .remoteAddress(Mono.fromSupplier(server::address))
 					         .runOn(loop);
 		}
 		else {
 			client =
 					TcpClient.create(pool)
-					         .addressSupplier(server::address);
+					         .remoteAddress(Mono.fromSupplier(server::address));
 		}
 
 		Set<String> threadNames = new ConcurrentSkipListSet<>();
@@ -923,7 +922,7 @@ public class TcpClientTests {
 
 		Connection conn =
 				TcpClient.create()
-				         .addressSupplier(server::address)
+				         .remoteAddress(Mono.fromSupplier(server::address))
 				         .wiretap(true)
 				         .connectNow();
 
@@ -981,7 +980,7 @@ public class TcpClientTests {
 
 		Connection conn =
 				TcpClient.create()
-				         .addressSupplier(server::address)
+				         .remoteAddress(Mono.fromSupplier(server::address))
 				         .wiretap(true)
 				         .connectNow();
 

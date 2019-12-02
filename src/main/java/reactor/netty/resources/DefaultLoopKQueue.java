@@ -19,16 +19,16 @@ import java.util.concurrent.ThreadFactory;
 
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
 import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueDatagramChannel;
+import io.netty.channel.kqueue.KQueueDomainSocketChannel;
 import io.netty.channel.kqueue.KQueueEventLoopGroup;
 import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.socket.DatagramChannel;
-import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.unix.DomainSocketChannel;
+import io.netty.channel.unix.ServerDomainSocketChannel;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 
@@ -65,18 +65,24 @@ final class DefaultLoopKQueue implements DefaultLoop {
 	}
 
 	@Override
-	public Class<? extends ServerChannel> getServerChannel(EventLoopGroup group) {
-		return useKQueue(group) ? KQueueServerSocketChannel.class : NioServerSocketChannel.class;
-	}
-
-	@Override
-	public Class<? extends Channel> getChannel(EventLoopGroup group) {
-		return useKQueue(group) ? KQueueSocketChannel.class : NioSocketChannel.class;
-	}
-
-	@Override
-	public Class<? extends DatagramChannel> getDatagramChannel(EventLoopGroup group) {
-		return useKQueue(group) ? KQueueDatagramChannel.class : NioDatagramChannel.class;
+	@SuppressWarnings("unchecked")
+	public <CHANNEL extends Channel> CHANNEL getChannel(Class<CHANNEL> channelClass) {
+		if (channelClass.equals(Channel.class)) {
+			return (CHANNEL)new KQueueSocketChannel();
+		}
+		if (channelClass.equals(ServerSocketChannel.class)) {
+			return (CHANNEL)new KQueueServerSocketChannel();
+		}
+		if (channelClass.equals(DatagramChannel.class)) {
+			return (CHANNEL)new KQueueDatagramChannel();
+		}
+		if (channelClass.equals(DomainSocketChannel.class)) {
+			return (CHANNEL)new KQueueDomainSocketChannel();
+		}
+		if (channelClass.equals(ServerDomainSocketChannel.class)) {
+			return (CHANNEL)new KQueueDomainSocketChannel();
+		}
+		throw new IllegalArgumentException("Unsupported channel type: "+channelClass.getSimpleName());
 	}
 
 	@Override
@@ -84,7 +90,8 @@ final class DefaultLoopKQueue implements DefaultLoop {
 		return "kqueue";
 	}
 
-	private boolean useKQueue(EventLoopGroup group) {
+	@Override
+	public boolean supportGroup(EventLoopGroup group) {
 		if (group instanceof ColocatedEventLoopGroup) {
 			group = ((ColocatedEventLoopGroup) group).get();
 		}

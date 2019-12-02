@@ -475,17 +475,13 @@ public abstract class BootstrapHandlers {
 		return b;
 	}
 
-	public static ServerBootstrap removeMetricsSupport(ServerBootstrap b) {
-		return removeConfiguration(b, NettyPipeline.ChannelMetricsHandler);
-	}
-
 	public static Bootstrap removeMetricsSupport(Bootstrap b) {
 		removeConfiguration(b, NettyPipeline.ChannelMetricsHandler);
 
 		AddressResolverGroup<?> resolver = b.config().resolver();
 		if (resolver instanceof AddressResolverGroupMetrics) {
 			b.resolver(((AddressResolverGroupMetrics) resolver).resolverGroup);
-		}
+
 
 		return b;
 	}

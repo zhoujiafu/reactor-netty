@@ -21,11 +21,15 @@ import javax.annotation.Nullable;
 
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
+import reactor.netty.Connection;
+import reactor.netty.DisposableServer;
 
 /**
+ * A Udp Connection
+ *
  * @author Stephane Maldini
  */
-interface UdpConnection {
+interface UdpServerConnection extends Connection, DisposableServer {
 	/**
 	 * Join a multicast group.
 	 *

@@ -373,7 +373,7 @@ public final class ReactorNetty {
 
 	static ConnectionObserver compositeConnectionObserver(ConnectionObserver observer,
 			ConnectionObserver other) {
-
+		Objects.requireNonNull(other, "other observer");
 		if (observer == ConnectionObserver.emptyListener()) {
 			return other;
 		}

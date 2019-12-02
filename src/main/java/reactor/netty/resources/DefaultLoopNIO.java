@@ -19,23 +19,44 @@ import java.util.concurrent.ThreadFactory;
 
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
 import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
 /**
- * @author Violeta Georgieva
+ * @author Stephane Maldini
  */
-interface DefaultLoop {
+final class DefaultLoopNIO implements DefaultLoop {
 
-	EventLoopGroup newEventLoopGroup(int threads, ThreadFactory factory);
+	@Override
+	public EventLoopGroup newEventLoopGroup(int threads, ThreadFactory factory) {
+		throw new IllegalStateException("Missing Epoll/KQueue on current system");
+	}
 
-	boolean supportGroup(EventLoopGroup group);
+	@Override
+	@SuppressWarnings("unchecked")
+	public <CHANNEL extends Channel> CHANNEL getChannel(Class<CHANNEL> channelClass) {
+		if (channelClass.equals(Channel.class)) {
+			return (CHANNEL)new NioSocketChannel();
+		}
+		if (channelClass.equals(ServerSocketChannel.class)) {
+			return (CHANNEL)new NioServerSocketChannel();
+		}
+		if (channelClass.equals(DatagramChannel.class)) {
+			return (CHANNEL)new NioDatagramChannel();
+		}
+		throw new IllegalArgumentException("Unsupported channel type: "+channelClass.getSimpleName());
+	}
 
-	<CHANNEL extends Channel> CHANNEL getChannel(Class<CHANNEL> channelClass);
+	@Override
+	public String getName() {
+		return "nio";
+	}
 
-	String getName();
-
+	@Override
+	public boolean supportGroup(EventLoopGroup group) {
+		return true;
+	}
 }

@@ -147,34 +147,32 @@ public class UdpServerTests {
 			Connection server =
 					UdpServer.create()
 					         .option(ChannelOption.SO_REUSEADDR, true)
-					         .addressSupplier(() -> new InetSocketAddress(port))
+					         .localAddress(new InetSocketAddress(port))
 					         .runOn(resources, InternetProtocolFamily.IPv4)
-					         .handle((in, out) -> {
-						         Flux.<NetworkInterface>generate(s -> {
-					                             if (ifaces.hasMoreElements()) {
-						                             s.next(ifaces.nextElement());
-					                             }
-					                             else {
-						                             s.complete();
-					                             }
-				                             }).flatMap(iface -> {
-					                             if (isMulticastEnabledIPv4Interface(iface)) {
-						                             return in.join(multicastGroup,
-								                             iface);
-					                             }
-					                             return Flux.empty();
-				                             })
-				                               .thenMany(in.receive()
-				                                           .asByteArray()
-				                                           .doOnSubscribe(s -> latch2.countDown()))
-				                               .log()
-				                               .subscribe(bytes -> {
-					                               if (bytes.length == 1024) {
-						                               latch1.countDown();
-					                               }
-				                               });
-				                             return Flux.never();
+					         .doOnBound(conn ->
+							         Flux.<NetworkInterface>generate(s -> {
+				                             if (ifaces.hasMoreElements()) {
+					                             s.next(ifaces.nextElement());
+				                             }
+				                             else {
+					                             s.complete();
+				                             }
+			                             }).flatMap(iface -> {
+				                             if (isMulticastEnabledIPv4Interface(iface)) {
+					                             return conn.join(multicastGroup, iface);
+				                             }
+				                             return Flux.empty();
 			                             })
+			                               .thenMany(conn.inbound()
+			                                             .receive()
+			                                           .asByteArray()
+			                                           .doOnSubscribe(s -> latch2.countDown()))
+			                               .log()
+			                               .subscribe(bytes -> {
+				                               if (bytes.length == 1024) {
+					                               latch1.countDown();
+				                               }
+			                               }))
 			                 .bind()
 					         .block(Duration.ofSeconds(30));
 
@@ -262,7 +260,7 @@ public class UdpServerTests {
 
 		try {
 			UdpServer.create()
-			         .addressSupplier(conn::address)
+			         .localAddress(conn.address())
 			         .bindNow(Duration.ofSeconds(30));
 			fail("illegal-success");
 		}

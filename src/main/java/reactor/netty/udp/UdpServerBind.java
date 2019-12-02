@@ -15,6 +15,8 @@
  */
 package reactor.netty.udp;
 
+import java.util.Objects;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.EventLoopGroup;
 import reactor.core.publisher.Mono;
@@ -27,10 +29,16 @@ import reactor.netty.resources.LoopResources;
  */
 final class UdpServerBind extends UdpServer {
 
-	static final UdpServerBind INSTANCE = new UdpServerBind();
+	static final UdpServerBind INSTANCE = new UdpServerBind(UdpServerConfig.defaultServer());
+
+	final UdpServerConfig config;
+
+	UdpServerBind(UdpServerConfig config) {
+		this.config = Objects.requireNonNull(config, "config");
+	}
 
 	@Override
-	protected Mono<? extends Connection> bind(Bootstrap b) {
+	public Mono<UdpServerConnection> bind() {
 
 		//Default group and channel
 		if (b.config()
@@ -41,6 +49,19 @@ final class UdpServerBind extends UdpServer {
 
 			b.group(elg)
 			 .channel(loopResources.onDatagramChannel(elg));
+		}
+
+		Bootstrap b = source.configure();
+
+		boolean useNative = family == null && preferNative;
+
+		EventLoopGroup elg = loopResources.onClient(useNative);
+
+		if (useNative) {
+			b.channel(loopResources.onDatagramChannel(elg));
+		}
+		else {
+			b.channelFactory(() -> new NioDatagramChannel(family));
 		}
 
 		return ConnectionProvider.newConnection()

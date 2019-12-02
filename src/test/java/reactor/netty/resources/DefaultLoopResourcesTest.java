@@ -50,7 +50,7 @@ public class DefaultLoopResourcesTest {
 		Duration firstInvocation = StepVerifier.create(loopResources.disposeLater())
 		                                       .verifyComplete();
 		assertThat(loopResources.isDisposed()).isTrue();
-		if (!loopResources.preferNative()) {
+		if (!LoopResources.hasNativeSupport()) {
 			assertThat(loopResources.serverLoops.get().isTerminated()).isTrue();
 		}
 		else {

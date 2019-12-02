@@ -932,7 +932,7 @@ public class WebsocketTest {
 
 		HttpClient httpClient =
 				HttpClient.create()
-				          .addressSupplier(server::address)
+				          .remoteAddress(Mono.fromSupplier(server::address))
 				          .wiretap(true)
 				          .headers(h -> h.add(HttpHeaderNames.HOST, "[::1"));
 

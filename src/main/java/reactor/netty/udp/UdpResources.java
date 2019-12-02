@@ -126,18 +126,8 @@ public class UdpResources implements LoopResources {
 	}
 
 	@Override
-	public Class<? extends Channel> onChannel(EventLoopGroup group) {
-		return defaultLoops.onChannel(group);
-	}
-
-	@Override
 	public EventLoopGroup onClient(boolean useNative) {
 		return defaultLoops.onClient(useNative);
-	}
-
-	@Override
-	public Class<? extends DatagramChannel> onDatagramChannel(EventLoopGroup group) {
-		return defaultLoops.onDatagramChannel(group);
 	}
 
 	@Override
@@ -146,18 +136,13 @@ public class UdpResources implements LoopResources {
 	}
 
 	@Override
-	public Class<? extends ServerChannel> onServerChannel(EventLoopGroup group) {
-		return defaultLoops.onServerChannel(group);
+	public <CHANNEL extends Channel> CHANNEL onChannel(Class<CHANNEL> channelType, EventLoopGroup group) {
+		return defaultLoops.onChannel(channelType, group);
 	}
 
 	@Override
 	public EventLoopGroup onServerSelect(boolean useNative) {
 		return defaultLoops.onServerSelect(useNative);
-	}
-
-	@Override
-	public boolean preferNative() {
-		return defaultLoops.preferNative();
 	}
 
 	@Override

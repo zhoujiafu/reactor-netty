@@ -30,16 +30,64 @@ final class UdpClientConnect extends UdpClient {
 	static final UdpClientConnect INSTANCE = new UdpClientConnect();
 
 	@Override
-	protected Mono<? extends Connection> connect(Bootstrap b) {
-		//Default group and channel
-		if (b.config()
-				.group() == null) {
+	public UdpClientConfig configuration() {
+		return config;
+	}
+
+	@Override
+	public Mono<Connection> connect() {
+		Bootstrap b = new Bootstrap();
+
+		//TODO configure the operation provider - should remove
+		BootstrapHandlers.channelOperationFactory(b, config.channelOperationsProvider());
 
 			UdpResources loopResources = UdpResources.get();
 			EventLoopGroup elg = loopResources.onClient(LoopResources.DEFAULT_NATIVE);
 
-			b.group(elg)
-			 .channel(loopResources.onDatagramChannel(elg));
+		// Remote address
+		b.remoteAddress(config.remoteAddress());
+
+		// Resolver
+		b.resolver(config.resolver());
+
+		//configure event loops and channel factory
+		LoopResources r = config.loopResources();
+		boolean preferNative;
+
+		// No resources use the shared static TcpResources
+		if (r == null) {
+			r = UdpResources.get();
+			preferNative = LoopResources.DEFAULT_NATIVE;
+		}
+		else{
+			preferNative = config.isPreferNative();
+		}
+
+		EventLoopGroup elg = r.onClient(preferNative);
+		b.group(elg)
+		 .channel(r.onDatagramChannel(elg));
+
+		Bootstrap b = source.configure();
+
+		boolean useNative = family == null && preferNative;
+
+		EventLoopGroup elg = loopResources.onClient(useNative);
+
+		if (useNative) {
+			b.channel(loopResources.onDatagramChannel(elg));
+		}
+		else {
+			b.channelFactory(() -> new NioDatagramChannel(family));
+		}
+
+		return b.group(elg);
+
+		//transfer options if any
+		Map<ChannelOption<Object>, Object> options = config.options();
+		if (!options.isEmpty()) {
+			for(Map.Entry<ChannelOption<Object>, Object> option : options.entrySet()) {
+				b.option(option.getKey(), option.getValue());
+			}
 		}
 
 		return ConnectionProvider.newConnection()

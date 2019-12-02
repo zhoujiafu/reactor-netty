@@ -73,7 +73,7 @@ public class HttpRedirectTest {
 
 		HttpClient client =
 				HttpClient.create(pool)
-				          .addressSupplier(server::address);
+				          .remoteAddress(Mono.fromSupplier(server::address));
 
 		try {
 			Flux.range(0, 1000)
@@ -113,7 +113,7 @@ public class HttpRedirectTest {
 
 		HttpClient client =
 				HttpClient.create()
-				          .addressSupplier(server::address)
+				          .remoteAddress(Mono.fromSupplier(server::address))
 				          .wiretap(true);
 
 		String value =
@@ -253,7 +253,7 @@ public class HttpRedirectTest {
 
 		HttpClient client =
 				HttpClient.create()
-				          .addressSupplier(server::address)
+				          .remoteAddress(Mono.fromSupplier(server::address))
 				          .wiretap(true);
 
 		StepVerifier.create(client.followRedirect(true)
@@ -333,7 +333,7 @@ public class HttpRedirectTest {
 
 		AtomicInteger followRedirects = new AtomicInteger(0);
 		HttpClient.create()
-		          .addressSupplier(server::address)
+		          .remoteAddress(Mono.fromSupplier(server::address))
 		          .wiretap(true)
 		          .followRedirect((req, res) -> {
 		              boolean result = req.redirectedFrom().length < 4;
@@ -366,7 +366,7 @@ public class HttpRedirectTest {
 
 		StepVerifier.create(
 		        HttpClient.create()
-		                  .addressSupplier(server::address)
+		                  .remoteAddress(Mono.fromSupplier(server::address))
 		                  .wiretap(true)
 		                  .followRedirect((req, res) -> {
 		                      throw new RuntimeException("testFollowRedirectPredicateThrowsException");

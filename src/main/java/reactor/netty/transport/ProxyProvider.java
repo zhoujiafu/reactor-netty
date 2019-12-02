@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package reactor.netty.tcp;
+package reactor.netty.transport;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -87,7 +87,7 @@ public final class ProxyProvider {
 		this.username = builder.username;
 		this.password = builder.password;
 		if (Objects.isNull(builder.address)) {
-			this.address = () -> InetSocketAddressUtil.createResolved(builder.host, builder.port);
+			this.address = () -> AddressUtils.createResolved(builder.host, builder.port);
 		}
 		else {
 			this.address = builder.address;
@@ -175,8 +175,8 @@ public final class ProxyProvider {
 	 */
 	public boolean shouldProxy(SocketAddress address) {
 		SocketAddress addr = address;
-		if (address instanceof TcpUtils.SocketAddressSupplier) {
-			addr = ((TcpUtils.SocketAddressSupplier) address).get();
+		if (address instanceof AddressUtils.SocketAddressSupplier) {
+			addr = ((AddressUtils.SocketAddressSupplier) address).get();
 		}
 		return addr instanceof InetSocketAddress && shouldProxy(((InetSocketAddress) addr).getHostString());
 	}
@@ -293,7 +293,7 @@ public final class ProxyProvider {
 		@Override
 		public final Builder address(InetSocketAddress address) {
 			Objects.requireNonNull(address, "address");
-			this.address = () -> InetSocketAddressUtil.replaceWithResolved(address);
+			this.address = () -> AddressUtils.replaceWithResolved(address);
 			return this;
 		}
 

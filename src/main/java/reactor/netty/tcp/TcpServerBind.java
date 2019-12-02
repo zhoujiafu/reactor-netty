@@ -39,6 +39,7 @@ import reactor.netty.channel.BootstrapHandlers;
 import reactor.netty.channel.ChannelOperations;
 import reactor.netty.http.HttpResources;
 import reactor.netty.resources.LoopResources;
+import reactor.netty.transport.AddressUtils;
 
 import static reactor.netty.ReactorNetty.format;
 
@@ -56,18 +57,7 @@ final class TcpServerBind extends TcpServer {
 	}
 
 	@Override
-	public Mono<? extends DisposableServer> bind(ServerBootstrap b) {
-		SslProvider ssl = SslProvider.findSslSupport(b);
-		if (ssl != null && ssl.getDefaultConfigurationType() == null) {
-			ssl = SslProvider.updateDefaultConfiguration(ssl, SslProvider.DefaultConfigurationType.TCP);
-			SslProvider.setBootstrap(b, ssl);
-		}
-
-		if (b.config()
-		     .group() == null) {
-
-			TcpServerRunOn.configure(b, LoopResources.DEFAULT_NATIVE, TcpResources.get());
-		}
+	public Mono<DisposableServer> bind() {
 
 		return Mono.create(sink -> {
 			ServerBootstrap bootstrap = b.clone();

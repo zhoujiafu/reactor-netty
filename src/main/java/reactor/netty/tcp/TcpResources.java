@@ -170,8 +170,13 @@ public class TcpResources implements ConnectionProvider, LoopResources {
 	}
 
 	@Override
-	public Class<? extends Channel> onChannel(EventLoopGroup group) {
-		return defaultLoops.onChannel(group);
+	public <CHANNEL extends Channel> CHANNEL onChannel(Class<CHANNEL> channelType, EventLoopGroup group) {
+		return defaultLoops.onChannel(channelType, group);
+	}
+
+	@Override
+	public int maxConnections() {
+		return defaultProvider.maxConnections();
 	}
 
 	@Override
@@ -180,28 +185,14 @@ public class TcpResources implements ConnectionProvider, LoopResources {
 	}
 
 	@Override
-	public Class<? extends DatagramChannel> onDatagramChannel(EventLoopGroup group) {
-		return defaultLoops.onDatagramChannel(group);
-	}
-
-	@Override
 	public EventLoopGroup onServer(boolean useNative) {
 		return defaultLoops.onServer(useNative);
 	}
 
-	@Override
-	public Class<? extends ServerChannel> onServerChannel(EventLoopGroup group) {
-		return defaultLoops.onServerChannel(group);
-	}
 
 	@Override
 	public EventLoopGroup onServerSelect(boolean useNative) {
 		return defaultLoops.onServerSelect(useNative);
-	}
-
-	@Override
-	public boolean preferNative() {
-		return defaultLoops.preferNative();
 	}
 
 	@Override

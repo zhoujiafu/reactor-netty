@@ -27,6 +27,8 @@ import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.ConnectionObserver;
 import reactor.netty.FutureMono;
+import reactor.netty.NettyInbound;
+import reactor.netty.NettyOutbound;
 import reactor.netty.channel.ChannelOperations;
 import reactor.util.Logger;
 import reactor.util.Loggers;
@@ -36,13 +38,12 @@ import static reactor.netty.ReactorNetty.format;
 /**
  * @author Stephane Maldini
  */
-final class UdpOperations extends ChannelOperations<UdpInbound, UdpOutbound>
-		implements UdpInbound, UdpOutbound {
+final class UdpServerOperations extends ChannelOperations<NettyInbound, NettyOutbound> implements UdpServerConnection {
 
 	final DatagramChannel  datagramChannel;
 
 	@SuppressWarnings("unchecked")
-	UdpOperations(Connection c, ConnectionObserver listener) {
+	UdpServerOperations(Connection c, ConnectionObserver listener) {
 		super(c, listener);
 		this.datagramChannel = (DatagramChannel)c.channel();
 	}
@@ -109,5 +110,5 @@ final class UdpOperations extends ChannelOperations<UdpInbound, UdpOutbound>
 		                 });
 	}
 
-	static final Logger log = Loggers.getLogger(UdpOperations.class);
+	static final Logger log = Loggers.getLogger(UdpServerOperations.class);
 }

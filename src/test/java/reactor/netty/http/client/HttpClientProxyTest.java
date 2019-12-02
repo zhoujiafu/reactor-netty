@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.NettyPipeline;
 import reactor.netty.http.server.HttpServer;
-import reactor.netty.tcp.ProxyProvider;
+import reactor.netty.transport.ProxyProvider;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuple2;
 
@@ -180,7 +180,7 @@ public class HttpClientProxyTest {
 				          });
 
 		if (connectAddressSupplier != null) {
-			client = client.addressSupplier(server::address);
+			client = client.remoteAddress(Mono.fromSupplier(server::address));
 		}
 
 		return client.wiretap(wiretap)

@@ -20,9 +20,12 @@ package reactor.netty.resources;
  */
 final class DefaultLoopNativeDetector {
 
-	private static final DefaultLoop INSTANCE;
+	static final DefaultLoop INSTANCE;
+	static final DefaultLoop NIO;
 
 	static {
+		NIO = new DefaultLoopNIO();
+
 		if (DefaultLoopKQueue.hasKQueue()) {
 			INSTANCE = new DefaultLoopKQueue();
 		}
@@ -30,11 +33,7 @@ final class DefaultLoopNativeDetector {
 			INSTANCE = new DefaultLoopEpoll();
 		}
 		else {
-			INSTANCE = new DefaultLoop() {};
+			INSTANCE = NIO;
 		}
-	}
-
-	public static DefaultLoop getInstance() {
-		return INSTANCE;
 	}
 }

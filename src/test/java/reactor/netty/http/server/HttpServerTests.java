@@ -632,7 +632,7 @@ public class HttpServerTests {
 
 		HttpClient client =
 				HttpClient.create(ConnectionProvider.fixed("test", 1))
-				          .addressSupplier(disposableServer::address)
+				          .remoteAddress(Mono.fromSupplier(disposableServer::address))
 				          .wiretap(true);
 
 		doTestIssue186(client);
@@ -697,7 +697,7 @@ public class HttpServerTests {
 
 		HttpClient client =
 				HttpClient.create(ConnectionProvider.fixed("test", 1))
-				          .addressSupplier(disposableServer::address);
+				          .remoteAddress(Mono.fromSupplier(disposableServer::address));
 
 		Mono<String> content = client.post()
 		                             .uri("/")
@@ -1023,7 +1023,7 @@ public class HttpServerTests {
 		Flux.range(0, 70)
 		    .flatMap(i ->
 		        HttpClient.create()
-		                  .addressSupplier(disposableServer::address)
+		                  .remoteAddress(Mono.fromSupplier(disposableServer::address))
 		                  .post()
 		                  .uri("/")
 		                  .send(ByteBufFlux.fromString(Mono.just("test")))
@@ -1062,7 +1062,7 @@ public class HttpServerTests {
 		                                        .build();
 		StepVerifier.create(
 				HttpClient.create()
-				          .addressSupplier(disposableServer::address)
+				          .remoteAddress(Mono.fromSupplier(disposableServer::address))
 				          .secure(spec -> spec.sslContext(clientCtx))
 				          .get()
 				          .uri("/")

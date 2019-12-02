@@ -156,8 +156,12 @@ public class BlockingConnectionTest {
 	public void testTimeoutOnStart() {
 		TcpClient neverStart = new TcpClient(){
 			@Override
-			public Mono<? extends Connection> connect(Bootstrap b) {
+			public Mono<Connection> connect() {
 				return Mono.never();
+			}
+			@Override
+			public TcpClientConfig configuration() {
+				return TcpClientConnect.INSTANCE.configuration();
 			}
 		};
 
@@ -170,8 +174,12 @@ public class BlockingConnectionTest {
 	public void testTimeoutOnStop() {
 		Connection c = new TcpClient(){
 			@Override
-			public Mono<? extends Connection> connect(Bootstrap b) {
+			public Mono<Connection> connect() {
 				return Mono.just(NEVER_STOP_CONTEXT);
+			}
+			@Override
+			public TcpClientConfig configuration() {
+				return TcpClientConnect.INSTANCE.configuration();
 			}
 		}.connectNow();
 
@@ -184,13 +192,13 @@ public class BlockingConnectionTest {
 	public void getContextAddressAndHost() {
 		DisposableServer c = new TcpServer(){
 			@Override
-			public Mono<? extends DisposableServer> bind(ServerBootstrap b) {
+			public Mono<DisposableServer> bind() {
 				return Mono.just(NEVER_STOP_SERVER);
 			}
 
 			@Override
-			public ServerBootstrap configure() {
-				return TcpServerBind.INSTANCE.createServerBootstrap();
+			public TcpServerConfig configuration() {
+				return TcpServerBind.INSTANCE.configuration();
 			}
 		}.bindNow();
 

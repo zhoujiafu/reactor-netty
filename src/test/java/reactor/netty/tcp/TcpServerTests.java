@@ -362,9 +362,8 @@ public class TcpServerTests {
 	@Test
 	public void gettingOptionsDuplicates() {
 		TcpServer server = TcpServer.create().host("example.com").port(123);
-		Assertions.assertThat(server.configure())
-		          .isNotSameAs(TcpServerBind.INSTANCE.serverBootstrap)
-		          .isNotSameAs(server.configure());
+		Assertions.assertThat(server.configuration())
+		          .isNotSameAs(TcpServerBind.INSTANCE.configuration());
 	}
 
 	@Test
@@ -736,7 +735,7 @@ public class TcpServerTests {
 		assertNotNull(server);
 
 		Connection client = TcpClient.create()
-		                             .addressSupplier(server::address)
+		                             .remoteAddress(Mono.fromSupplier(server::address))
 		                             .handle((in, out) -> {
 		                                 in.receive()
 		                                   .asString()
@@ -870,7 +869,7 @@ public class TcpServerTests {
 				         .bindNow();
 
 		TcpClient.create()
-		         .addressSupplier(server::address)
+		         .remoteAddress(Mono.fromSupplier(server::address))
 		         .wiretap(true)
 		         .connect()
 		         .subscribe();
