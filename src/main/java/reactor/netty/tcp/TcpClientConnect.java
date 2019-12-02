@@ -24,12 +24,12 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.resolver.AddressResolverGroup;
+import io.netty.resolver.NoopAddressResolverGroup;
 import io.netty.util.AttributeKey;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.ConnectionObserver;
 import reactor.netty.NettyPipeline;
-import reactor.netty.channel.AddressResolverGroupMetrics;
 import reactor.netty.channel.BootstrapHandlers;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
@@ -40,12 +40,12 @@ import reactor.netty.transport.ProxyProvider;
  */
 final class TcpClientConnect extends TcpClient {
 
-	static final TcpClientConnect INSTANCE = new TcpClientConnect(ConnectionProvider.newConnection());
+	static final TcpClientConnect INSTANCE = new TcpClientConnect(TcpClientConfig.defaultClient());
 
-	final ConnectionProvider provider;
+	final TcpClientConfig config;
 
-	TcpClientConnect(ConnectionProvider provider) {
-		this.provider = Objects.requireNonNull(provider, "connectionProvider");
+	TcpClientConnect(TcpClientConfig config) {
+		this.config = Objects.requireNonNull(config, "config");
 	}
 
 	@Override
@@ -106,15 +106,21 @@ final class TcpClientConnect extends TcpClient {
 		if (config.proxyProvider() != null) {
 			BootstrapHandlers.updateConfiguration(b, NettyPipeline.ProxyHandler, new ProxyProvider.DeferredProxySupport(config.proxyProvider()));
 
-		if (b.config()
-		     .group() == null) {
-
-			TcpClientRunOn.configure(b,
-					LoopResources.DEFAULT_NATIVE,
-					TcpResources.get());
+			if (b.config()
+			     .resolver() == DefaultAddressResolverGroup.INSTANCE) {
+				b.resolver(NoopAddressResolverGroup.INSTANCE);
+			}
 		}
 
-		return provider.acquire(b);
+		// Configure ssl if any
+		if (config.sslProvider() != null) {
+			SslProvider.setBootstrap(b, config.sslProvider);
+		}
+
+		// Configure logging if any
+		if (config.loggingHandler != null) {
+			BootstrapHandlers.updateLogSupport(b, config.loggingHandler);
+		}
 
 		// Configure metrics if any
 		if (config.metricsCategory() != null) {

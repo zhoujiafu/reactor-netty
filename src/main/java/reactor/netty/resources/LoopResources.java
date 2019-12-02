@@ -223,4 +223,22 @@ public interface LoopResources extends Disposable {
 	static boolean hasNativeSupport() {
 		return DefaultLoopNativeDetector.INSTANCE != DefaultLoopNativeDetector.NIO;
 	}
+
+	/**
+	 * Return true if environment supports native connections
+	 *
+	 * @return true if environment supports native connections
+	 */
+	static boolean hasNativeSupport() {
+		return DefaultLoopNativeDetector.INSTANCE != DefaultLoopNativeDetector.NIO;
+	}
+
+	/**
+	 * Return true if environment supports native connections
+	 *
+	 * @return true if environment supports native connections
+	 */
+	static boolean hasNativeSupport() {
+		return DefaultLoopNativeDetector.INSTANCE != DefaultLoopNativeDetector.NIO;
+	}
 }

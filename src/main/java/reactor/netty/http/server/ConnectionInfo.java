@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 import io.netty.channel.Channel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.util.AttributeKey;
 import reactor.netty.transport.AddressUtils;
 
 /**

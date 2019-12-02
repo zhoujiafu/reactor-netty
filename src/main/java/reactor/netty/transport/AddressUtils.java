@@ -197,18 +197,9 @@ final public class AddressUtils {
 		return createUnresolved(host, port);
 	}
 
-	@SuppressWarnings("unchecked")
 	static MonoSocketAddress lazyAddress(Mono<? extends SocketAddress> supplier) {
 		if (supplier instanceof Callable) {
-			return new MonoSocketAddress(() -> {
-				try {
-					return ((Callable<SocketAddress>) supplier).call();
-				}
-				catch (Exception e) {
-					throw Exceptions.propagate(e);
-				}
-			});
-		}
-		return new MonoSocketAddress(supplier);
+			return MonoSocketAddress
+		} return new MonoSocketAddress(supplier);
 	}
 }

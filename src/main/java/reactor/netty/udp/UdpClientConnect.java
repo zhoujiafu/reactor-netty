@@ -35,6 +35,11 @@ final class UdpClientConnect extends UdpClient {
 	}
 
 	@Override
+	public UdpClientConfig configuration() {
+		return config;
+	}
+
+	@Override
 	public Mono<Connection> connect() {
 		Bootstrap b = new Bootstrap();
 

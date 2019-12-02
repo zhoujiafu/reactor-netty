@@ -464,26 +464,12 @@ public abstract class BootstrapHandlers {
 		return b;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static Bootstrap updateMetricsSupport(Bootstrap b, ChannelMetricsRecorder recorder) {
-		updateConfiguration(b,
-				NettyPipeline.ChannelMetricsHandler,
-				new DeferredMetricsSupport(recorder, false));
-
-		b.resolver(new AddressResolverGroupMetrics((AddressResolverGroup<SocketAddress>) b.config().resolver(), recorder));
-
-		return b;
+	public static ServerBootstrap removeMetricsSupport(ServerBootstrap b) {
+		return removeConfiguration(b, NettyPipeline.TcpMetricsHandler);
 	}
 
 	public static Bootstrap removeMetricsSupport(Bootstrap b) {
-		removeConfiguration(b, NettyPipeline.ChannelMetricsHandler);
-
-		AddressResolverGroup<?> resolver = b.config().resolver();
-		if (resolver instanceof AddressResolverGroupMetrics) {
-			b.resolver(((AddressResolverGroupMetrics) resolver).resolverGroup);
-
-
-		return b;
+		return removeConfiguration(b, NettyPipeline.TcpMetricsHandler);
 	}
 
 	/**
