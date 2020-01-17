@@ -2,6 +2,9 @@ package reactor.netty.transport;
 
 import java.net.SocketAddress;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.netty.bootstrap.AbstractBootstrap;
 import io.netty.bootstrap.FailedChannel;
@@ -14,16 +17,20 @@ import io.netty.channel.ChannelPromise;
 import io.netty.channel.DefaultChannelPromise;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.channel.unix.DomainSocketChannel;
 import io.netty.resolver.AddressResolver;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
+import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.internal.logging.InternalLogger;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 import reactor.netty.Connection;
 import reactor.netty.resources.LoopResources;
-import reactor.netty.tcp.TcpResources;
 
 /**
  * @author Stephane Maldini
@@ -31,11 +38,10 @@ import reactor.netty.tcp.TcpResources;
 public class TransportConnector {
 
 	static <C extends Connection> Mono<C> connect(TransportClientConfig<?, C> clientConfig) {
+		final ChannelFuture regFuture = initAndRegister(clientConfig);
 
 		final SocketAddress remoteAddress = clientConfig.remoteAddress;
 		final SocketAddress localAddress = clientConfig.localAddress;
-
-		final ChannelFuture regFuture = initAndRegister(clientConfig.loopResources);
 		final Channel channel = regFuture.channel();
 
 		if (regFuture.isDone()) {
@@ -116,14 +122,20 @@ public class TransportConnector {
 		return promise;
 	}
 
-	static ChannelFuture initAndRegister(TransportClientConfig<?, ?> config) {
-		LoopResources r = config.loopResources == null ? config.defaultLoopResources() : config.loopResources;
-		boolean preferNative = config.preferNative;
-		EventLoopGroup elg = r.onClient(preferNative);
-		elg.next()
+	static Mono<Channel> initAndRegister(TransportClientConfig<?, ?> config) {
+		LoopResources r = config.loopResources == null ?
+				config.defaultLoopResources() :
+				config.loopResources;
+
+		Class<? extends Channel> channelType = config.localAddress instanceof DomainSocketAddress ?
+				DomainSocketChannel.class :
+				SocketChannel.class;
+
+		EventLoopGroup elg = r.onClient(config.preferNative);
+
 		Channel channel = null;
 		try {
-			channel = r.onChannel(config.channelType, elg);
+			channel = r.onChannel(channelType, elg);
 			init(channel);
 		}
 		catch (Throwable t) {
@@ -131,16 +143,15 @@ public class TransportConnector {
 				// channel can be null if newChannel crashed (eg SocketException("too many open files"))
 				channel.unsafe()
 				       .closeForcibly();
-				// as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
-				return new DefaultChannelPromise(channel, GlobalEventExecutor.INSTANCE).setFailure(t);
 			}
-			// as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
-			return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
+			return Mono.error(t);
 		}
 
-		ChannelFuture regFuture = elg.register(channel);
+		EventLoop loop = elg.next();
+		MonoChannelPromise monoPromise = new MonoChannelPromise(channel, loop);
+		channel.unsafe().register(loop, monoPromise);
 
-		if (regFuture.cause() != null) {
+		if (monoPromise.cause() != null) {
 			if (channel.isRegistered()) {
 				channel.close();
 			}
@@ -159,7 +170,7 @@ public class TransportConnector {
 		//         because bind() or connect() will be executed *after* the scheduled registration task is executed
 		//         because register(), bind(), and connect() are all bound to the same thread.
 
-		return regFuture;
+		return monoPromise;
 	}
 
 	static void doConnect(final SocketAddress remoteAddress,
@@ -212,4 +223,175 @@ public class TransportConnector {
 		}
 	}
 
+
+	static final class MonoChannelPromise extends Mono<Channel> implements ChannelPromise {
+
+		final Channel channel;
+		final EventLoop loop;
+
+		MonoChannelPromise(Channel channel, EventLoop loop) {
+			this.channel = channel;
+			this.loop = loop;
+		}
+
+		@Override
+		public Channel channel() {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise setSuccess(Void result) {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise setSuccess() {
+			return null;
+		}
+
+		@Override
+		public boolean trySuccess() {
+			return false;
+		}
+
+		@Override
+		public ChannelPromise setFailure(Throwable cause) {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise addListener(GenericFutureListener<? extends Future<? super Void>> listener) {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise addListeners(GenericFutureListener<? extends Future<? super Void>>... listeners) {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise removeListener(GenericFutureListener<? extends Future<? super Void>> listener) {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise removeListeners(GenericFutureListener<? extends Future<? super Void>>... listeners) {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise sync() throws InterruptedException {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise syncUninterruptibly() {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise await() throws InterruptedException {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise awaitUninterruptibly() {
+			return null;
+		}
+
+		@Override
+		public ChannelPromise unvoid() {
+			return null;
+		}
+
+		@Override
+		public boolean isVoid() {
+			return false;
+		}
+
+		@Override
+		public boolean trySuccess(Void result) {
+			return false;
+		}
+
+		@Override
+		public boolean tryFailure(Throwable cause) {
+			return false;
+		}
+
+		@Override
+		public boolean setUncancellable() {
+			return false;
+		}
+
+		@Override
+		public boolean isSuccess() {
+			return false;
+		}
+
+		@Override
+		public boolean isCancellable() {
+			return false;
+		}
+
+		@Override
+		public Throwable cause() {
+			return null;
+		}
+
+		@Override
+		public boolean await(long timeout, TimeUnit unit) throws InterruptedException {
+			return false;
+		}
+
+		@Override
+		public boolean await(long timeoutMillis) throws InterruptedException {
+			return false;
+		}
+
+		@Override
+		public boolean awaitUninterruptibly(long timeout, TimeUnit unit) {
+			return false;
+		}
+
+		@Override
+		public boolean awaitUninterruptibly(long timeoutMillis) {
+			return false;
+		}
+
+		@Override
+		public Void getNow() {
+			return null;
+		}
+
+		@Override
+		public boolean cancel(boolean mayInterruptIfRunning) {
+			return false;
+		}
+
+		@Override
+		public boolean isCancelled() {
+			return false;
+		}
+
+		@Override
+		public boolean isDone() {
+			return false;
+		}
+
+		@Override
+		public Void get() throws InterruptedException, ExecutionException {
+			return null;
+		}
+
+		@Override
+		public Void get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+			return null;
+		}
+
+		@Override
+		public void subscribe(CoreSubscriber<? super Channel> actual) {
+
+		}
+	}
 }

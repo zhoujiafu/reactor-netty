@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
@@ -81,6 +82,15 @@ public abstract class TransportConfig {
 	}
 
 	/**
+	 * Return the channel type this configuration is associated with, for instance a {@link io.netty.channel.unix.DomainSocketChannel} or {@link io.netty.channel.socket.nio.NioDatagramChannel}
+	 *
+	 * @return the default {@link LoopResources} for this transport
+	 */
+	public final Class<? extends Channel> channelType() {
+		return channelType;
+	}
+
+	/**
 	 * Return the configured metrics category {@link String} or empty
 	 *
 	 * @return the configured metrics category {@link String} or empty
@@ -114,6 +124,7 @@ public abstract class TransportConfig {
 	SocketAddress            localAddress;
 	String                   metricsCategory;
 	LoggingHandler           loggingHandler;
+	Class<? extends Channel> channelType;
 
 	/**
 	 * Default TransportConfig

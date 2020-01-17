@@ -44,9 +44,10 @@ import reactor.netty.transport.TransportClient;
  *          .doOnConnect(connectMetrics)
  *          .doOnConnected(connectedMetrics)
  *          .doOnDisconnected(disconnectedMetrics)
+ *          .secure()
+ *          .noSsl()
  *          .host("127.0.0.1")
  *          .port(1234)
- *          .secure()
  *          .connectNow()
  * }
  *

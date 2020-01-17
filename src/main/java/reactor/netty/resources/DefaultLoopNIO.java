@@ -21,6 +21,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -38,7 +39,7 @@ final class DefaultLoopNIO implements DefaultLoop {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <CHANNEL extends Channel> CHANNEL getChannel(Class<CHANNEL> channelClass) {
-		if (channelClass.equals(Channel.class)) {
+		if (channelClass.equals(SocketChannel.class)) {
 			return (CHANNEL)new NioSocketChannel();
 		}
 		if (channelClass.equals(ServerSocketChannel.class)) {

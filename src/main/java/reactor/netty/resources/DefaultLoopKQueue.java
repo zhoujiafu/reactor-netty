@@ -27,6 +27,7 @@ import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.unix.DomainSocketChannel;
 import io.netty.channel.unix.ServerDomainSocketChannel;
 import reactor.util.Logger;
@@ -67,7 +68,7 @@ final class DefaultLoopKQueue implements DefaultLoop {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <CHANNEL extends Channel> CHANNEL getChannel(Class<CHANNEL> channelClass) {
-		if (channelClass.equals(Channel.class)) {
+		if (channelClass.equals(SocketChannel.class)) {
 			return (CHANNEL)new KQueueSocketChannel();
 		}
 		if (channelClass.equals(ServerSocketChannel.class)) {

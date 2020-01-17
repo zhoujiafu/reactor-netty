@@ -441,10 +441,12 @@ public class HttpServerTests {
 		Future<?> f = ex.submit(() ->
 			    HttpServer.create()
 			              .port(0)
+
 			              .route(routes -> routes.get("/hello", (req, resp) -> resp.sendString(Mono.just("hello!"))))
 			              .wiretap(true)
 			              .bindUntilJavaShutdown(Duration.ofSeconds(2), ref::set)
 		);
+		
 
 		//if the server cannot be started, a ExecutionException will be thrown instead
 		assertThatExceptionOfType(TimeoutException.class)

@@ -15,6 +15,7 @@
  */
 package reactor.netty.http.client;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Objects;
 import java.util.Optional;

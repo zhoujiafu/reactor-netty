@@ -150,7 +150,7 @@ public class TcpClientTests {
 	public void testTcpClient() throws InterruptedException {
 		final CountDownLatch latch = new CountDownLatch(1);
 
-		Connection client = TcpClient.create()
+		TcpClient client = TcpClient.create()
 		                             .host("localhost")
 		                             .port(echoServerPort)
 		                             .handle((in, out) -> {
@@ -161,8 +161,9 @@ public class TcpClientTests {
 			                               return out.sendString(Flux.just("Hello World!"))
 			                                  .neverComplete();
 		                               })
-		                             .wiretap(true)
-		                             .connectNow();
+		                             .wiretap(true);
+
+		client.connectNow();
 
 		assertTrue(latch.await(30, TimeUnit.SECONDS));
 

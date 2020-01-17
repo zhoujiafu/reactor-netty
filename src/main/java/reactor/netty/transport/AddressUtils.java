@@ -199,7 +199,7 @@ final public class AddressUtils {
 
 	static MonoSocketAddress lazyAddress(Mono<? extends SocketAddress> supplier) {
 		if (supplier instanceof Callable) {
-			return MonoSocketAddress
+			return MonoSocketAddress;
 		} return new MonoSocketAddress(supplier);
 	}
 }

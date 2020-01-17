@@ -28,6 +28,7 @@ import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.unix.DomainSocketChannel;
 import io.netty.channel.unix.ServerDomainSocketChannel;
 import reactor.util.Logger;
@@ -68,7 +69,7 @@ final class DefaultLoopEpoll implements DefaultLoop {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <CHANNEL extends Channel> CHANNEL getChannel(Class<CHANNEL> channelClass) {
-		if (channelClass.equals(Channel.class)) {
+		if (channelClass.equals(SocketChannel.class)) {
 			return (CHANNEL)new EpollSocketChannel();
 		}
 		if (channelClass.equals(ServerSocketChannel.class)) {
