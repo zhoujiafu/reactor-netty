@@ -522,10 +522,14 @@ public abstract class TcpClient {
 
 	/**
 	 * Specifies whether the metrics are enabled on the {@link TcpClient}.
-	 * All generated metrics are registered in the Micrometer MeterRegistry,
+	 * All generated metrics are registered in the global composite registry
+	 * provided by Micrometer with name prefix {@code "reactor.netty.tcp.client"},
 	 * assuming Micrometer is on the classpath.
-	 * if {@code name} is {@code NULL} - {@code reactor.netty.tcp.client}
-	 * will be used as a name.
+	 * <p>
+	 * Note: As the the global composite registry is used for registering the meters,
+	 * all MeterFilter (for example for limiting the maximum allowable tags should be applied
+	 * outside Reactor Netty.
+	 * </p>
 	 *
 	 * @param metricsEnabled if true enables the metrics on the client.
 	 * @return a new {@link TcpClient}

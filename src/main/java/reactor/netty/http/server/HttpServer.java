@@ -307,8 +307,14 @@ public abstract class HttpServer {
 
 	/**
 	 * Specifies whether the metrics are enabled on the {@link HttpServer}.
-	 * All generated metrics are registered in the Micrometer MeterRegistry,
+	 * All generated metrics are registered in the global composite registry
+	 * provided by Micrometer with name prefix {@code "reactor.netty.http.server"},
 	 * assuming Micrometer is on the classpath.
+	 * <p>
+	 * Note: As the the global composite registry is used for registering the meters,
+	 * all MeterFilter (for example for limiting the maximum allowable tags should be applied
+	 * outside Reactor Netty.
+	 * </p>
 	 *
 	 * @param metricsEnabled if true enables the metrics on the server.
 	 * @return a new {@link HttpServer}

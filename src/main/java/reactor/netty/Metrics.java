@@ -52,8 +52,6 @@ public class Metrics {
 
 	public static final String ERROR = "ERROR";
 
-	public static final int MAX_URI_TAGS = 100;
-
 
 	@Nullable
 	public static String formatSocketAddress(@Nullable SocketAddress socketAddress) {
